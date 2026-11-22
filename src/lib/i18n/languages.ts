@@ -1,5 +1,6 @@
 export const LANGUAGE_NAMES = {
   en: 'English',
+  cs: 'Čeština',
   zh: '简体中文',
   ja: '日本語',
   fr: 'Français',

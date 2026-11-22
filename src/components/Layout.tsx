@@ -2,7 +2,10 @@ import type { Response } from '@/lib/api/response';
 import useAvatar from '@/lib/client/hooks/useAvatar';
 import useLogin from '@/lib/client/hooks/useLogin';
 import { useLogout } from '@/lib/client/hooks/useLogout';
+import { useSettingsStore } from '@/lib/client/store/settings';
 import { useUserStore } from '@/lib/client/store/user';
+import { currentLanguage, setLanguage } from '@/lib/i18n';
+import { stripLocale, toUrlLocale, type UrlLocale } from '@/lib/i18n/urlLocale';
 import type { SafeConfig } from '@/lib/config/safe';
 import { fetchApi } from '@/lib/fetchApi';
 import { isAdministrator } from '@/lib/role';
@@ -11,14 +14,17 @@ import {
   AppShell,
   Avatar,
   Box,
-  Burger,
   Button,
   Divider,
+  Drawer,
   Group,
   Menu,
   NavLink,
   Paper,
   ScrollArea,
+  SegmentedControl,
+  Stack,
+  Text,
   Title,
   Tooltip,
   useMantineColorScheme,
@@ -40,6 +46,7 @@ import {
   IconHome,
   IconLink,
   IconLogout,
+  IconMenu2,
   IconRefreshDot,
   IconSettingsFilled,
   IconShieldLockFilled,
@@ -55,7 +62,6 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavigateFunction, Outlet, useLoaderData, useLocation, useNavigate } from 'react-router-dom';
 import type { dashboardLoader } from '../client/routes';
 import ConfigProvider from './ConfigProvider';
-import LanguageSelect from './LanguageSelect';
 import VersionBadge from './VersionBadge';
 import DashboardUpload from './upload/DashboardUpload';
 import { SETTINGS_EXTERNAL_LINKS } from './pages/serverSettings';
@@ -249,6 +255,27 @@ export default function Layout() {
   const { t } = useTranslation(['layout', 'common', 'serverSettings']);
   const { colorScheme } = useMantineColorScheme();
   const [opened, setOpened] = useState(false);
+  const [menuOpened, setMenuOpened] = useState(false);
+  const urlLocale = toUrlLocale(currentLanguage());
+  const themeSetting = useSettingsStore((state) => state.settings.theme);
+  const updateSetting = useSettingsStore((state) => state.update);
+  const themeChoice = themeSetting === 'system' ? 'auto' : colorScheme === 'dark' ? 'dark' : 'light';
+
+  // language lives in the URL token, so switching it means opening the same page under the other token
+  const switchLanguage = (lng: string) => {
+    const locale = toUrlLocale(lng) as UrlLocale;
+    setLanguage(locale);
+    window.location.assign(
+      `/${locale}${stripLocale(window.location.pathname)}${window.location.search}${window.location.hash}`,
+    );
+  };
+
+  const switchTheme = (choice: string) => {
+    updateSetting(
+      'theme',
+      choice === 'auto' ? 'system' : choice === 'dark' ? 'builtin:dark_blue' : 'builtin:light_blue',
+    );
+  };
   const modals = useModals();
   const clipboard = useClipboard();
   const setUser = useUserStore((s) => s.setUser);
@@ -350,15 +377,17 @@ export default function Layout() {
               }}
             />
             <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-              <Burger
-                opened={opened}
-                onClick={() => setOpened((o) => !o)}
-                size='sm'
+              <ActionIcon
+                variant='subtle'
                 color='white'
-                mr='xl'
-                hiddenFrom='sm'
-                bdrs='md'
-              />
+                size='lg'
+                radius='xl'
+                mr='xs'
+                aria-label={t('menu.open')}
+                onClick={() => setMenuOpened(true)}
+              >
+                <IconMenu2 size='1.4rem' />
+              </ActionIcon>
 
               {config.website.titleLogo && (
                 <Avatar
@@ -371,29 +400,29 @@ export default function Layout() {
               )}
 
               <Group gap='xs' wrap='nowrap'>
-                <Tooltip label='All sunamo sites'>
+                <Tooltip label={t('menu.allSites')}>
                   <ActionIcon
                     component='a'
-                    href={npeRootUrl()}
+                    href={`${npeRootUrl()}/${urlLocale}`}
                     variant='subtle'
                     color='white'
                     size='lg'
                     radius='xl'
-                    aria-label='All sunamo sites'
+                    aria-label={t('menu.allSites')}
                   >
                     <IconWorld size='1.4rem' />
                   </ActionIcon>
                 </Tooltip>
 
-                <Tooltip label='Home'>
+                <Tooltip label={t('menu.home')}>
                   <ActionIcon
-                    component='a'
-                    href='/dashboard'
+                    component={Link}
+                    to='/dashboard'
                     variant='subtle'
                     color='white'
                     size='lg'
                     radius='xl'
-                    aria-label='Home'
+                    aria-label={t('menu.home')}
                   >
                     <IconHome size='1.4rem' />
                   </ActionIcon>
@@ -401,8 +430,6 @@ export default function Layout() {
               </Group>
 
               <Group gap='xs' wrap='nowrap' style={{ marginLeft: 'auto' }}>
-                <LanguageSelect />
-
                 <Menu shadow='md' width={200}>
                   <Menu.Target>
                     <Button
@@ -475,6 +502,57 @@ export default function Layout() {
               </Group>
             </div>
           </AppShell.Header>
+
+          <Drawer
+            opened={menuOpened}
+            onClose={() => setMenuOpened(false)}
+            title={t('menu.title')}
+            position='left'
+            size='xs'
+          >
+            <Stack gap='lg'>
+              <div>
+                <Text size='sm' fw={500} mb={4}>
+                  {t('menu.language')}
+                </Text>
+                <SegmentedControl
+                  fullWidth
+                  value={urlLocale}
+                  onChange={switchLanguage}
+                  data={[
+                    { value: 'cs', label: 'Čeština' },
+                    { value: 'en', label: 'English' },
+                  ]}
+                />
+              </div>
+
+              <div>
+                <Text size='sm' fw={500} mb={4}>
+                  {t('menu.theme')}
+                </Text>
+                <SegmentedControl
+                  fullWidth
+                  value={themeChoice}
+                  onChange={switchTheme}
+                  data={[
+                    { value: 'light', label: t('menu.themeLight') },
+                    { value: 'dark', label: t('menu.themeDark') },
+                    { value: 'auto', label: t('menu.themeAuto') },
+                  ]}
+                />
+              </div>
+
+              <Box hiddenFrom='sm' onClick={() => setMenuOpened(false)}>
+                {renderLinks(
+                  buildNavLinks(t),
+                  location.pathname,
+                  user as Response['/api/user']['user'],
+                  config,
+                  navigate,
+                )}
+              </Box>
+            </Stack>
+          </Drawer>
 
           <AppShell.Navbar hidden={!opened} zIndex={90}>
             <Title hiddenFrom='sm' size={24} m='sm' style={{ marginBottom: 20 }}>

@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "home": "Domů",
+    "metrics": "Statistiky",
+    "files": "Soubory",
+    "folders": "Složky",
+    "upload": "Nahrát",
+    "uploadFile": "Soubor",
+    "uploadText": "Text",
+    "urls": "Odkazy",
+    "administrator": "Správce",
+    "adminDashboard": "Přehled",
+    "serverSettings": "Nastavení",
+    "serverActions": "Akce",
+    "users": "Uživatelé",
+    "invites": "Pozvánky"
+  },
+  "header": {
+    "logoAlt": "Logo",
+    "avatarAlt": "Avatar uživatele"
+  },
+  "userMenu": {
+    "administratorLabel": "{{username}} (správce)",
+    "copyToken": "Kopírovat token",
+    "refreshToken": "Obnovit token",
+    "settings": "Nastavení",
+    "serverSettings": "Nastavení serveru",
+    "logout": "Odhlásit",
+    "loggingOut": "Odhlašování..."
+  },
+  "notFound": {
+    "message": "Stránka nenalezena",
+    "goHome": "Na úvod"
+  },
+  "errors": {
+    "generic": {
+      "title": "Došlo k chybě",
+      "message": "Něco se pokazilo. Zkuste to později znovu."
+    },
+    "dashboard": {
+      "title": "Chyba přehledu",
+      "message": "Při načítání přehledu se něco pokazilo. Zkuste to později znovu."
+    },
+    "reload": {
+      "title": "Je dostupná nová verze",
+      "message": "Je dostupná nová verze aplikace. Obnovte stránku.",
+      "button": "Obnovit stránku",
+      "why": "Proč to vidím?"
+    }
+  },
+  "menu": {
+    "open": "Otevřít menu",
+    "title": "Menu",
+    "language": "Jazyk",
+    "theme": "Motiv",
+    "themeLight": "Světlý",
+    "themeDark": "Tmavý",
+    "themeAuto": "Automaticky",
+    "allSites": "Všechny weby sunamo",
+    "home": "Domů"
+  }
+}
