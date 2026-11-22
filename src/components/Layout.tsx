@@ -7,6 +7,7 @@ import type { SafeConfig } from '@/lib/config/safe';
 import { fetchApi } from '@/lib/fetchApi';
 import { isAdministrator } from '@/lib/role';
 import {
+  ActionIcon,
   AppShell,
   Avatar,
   Box,
@@ -19,6 +20,7 @@ import {
   Paper,
   ScrollArea,
   Title,
+  Tooltip,
   useMantineColorScheme,
 } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
@@ -45,6 +47,7 @@ import {
   IconTags,
   IconUpload,
   IconUsersGroup,
+  IconWorld,
 } from '@tabler/icons-react';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
@@ -66,6 +69,10 @@ const SUNAMO_COLOR_BAR =
   '#DEB086 60%, #DEB086 65%, #C77341 65%, #C77341 70%, #6D7F2F 70%, #6D7F2F 75%, ' +
   '#EC897B 75%, #EC897B 80%, #AE485C 80%, #AE485C 85%, #CC08C9 85%, #CC08C9 90%, ' +
   '#C04277 90%, #C04277 95%, #A74B89 95%, #A74B89 100%)';
+
+// Central npe site (root of all sunamo sites): local FE port 4005 on localhost, sunamo.cz otherwise.
+const npeRootUrl = () =>
+  window.location.hostname === 'localhost' ? 'http://localhost:4005' : 'https://sunamo.cz';
 
 type NavLinks = {
   label: string;
@@ -363,9 +370,35 @@ export default function Layout() {
                 />
               )}
 
-              <Title visibleFrom='sm' lineClamp={1} size={32} c='white'>
-                {config.website.title.trim()}
-              </Title>
+              <Group gap='xs' wrap='nowrap'>
+                <Tooltip label='All sunamo sites'>
+                  <ActionIcon
+                    component='a'
+                    href={npeRootUrl()}
+                    variant='subtle'
+                    color='white'
+                    size='lg'
+                    radius='xl'
+                    aria-label='All sunamo sites'
+                  >
+                    <IconWorld size='1.4rem' />
+                  </ActionIcon>
+                </Tooltip>
+
+                <Tooltip label='Home'>
+                  <ActionIcon
+                    component='a'
+                    href='/dashboard'
+                    variant='subtle'
+                    color='white'
+                    size='lg'
+                    radius='xl'
+                    aria-label='Home'
+                  >
+                    <IconHome size='1.4rem' />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
 
               <Group gap='xs' wrap='nowrap' style={{ marginLeft: 'auto' }}>
                 <LanguageSelect />
