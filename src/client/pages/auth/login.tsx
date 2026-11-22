@@ -13,6 +13,7 @@ import { useTitle } from '@/lib/client/hooks/useTitle';
 import {
   Anchor,
   Box,
+  Button,
   Center,
   Divider,
   Group,
@@ -225,6 +226,10 @@ export default function Login() {
           </Title>
 
           <Stack>
+            <Button component='a' href='/api/auth/npe' leftSection={<IconCircleKeyFilled size='1.1rem' />}>
+              Sign in with Sunamo account
+            </Button>
+
             {showLocalLogin && (
               <LocalLogin
                 form={form}

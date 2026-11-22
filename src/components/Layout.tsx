@@ -58,6 +58,16 @@ import VersionBadge from './VersionBadge';
 import DashboardUpload from './upload/DashboardUpload';
 import { SETTINGS_EXTERNAL_LINKS } from './pages/serverSettings';
 
+// Same colour strip as the other sunamo.cz sites (--scz-color-bar in fluent-base.css).
+const SUNAMO_COLOR_BAR =
+  'linear-gradient(to right, #0B0B3F 0%, #0B0B3F 5%, #BB4C2E 5%, #BB4C2E 10%, #20096E 10%, #20096E 15%, ' +
+  '#8F750D 15%, #8F750D 20%, #008E40 20%, #008E40 25%, #76D9DE 25%, #76D9DE 30%, ' +
+  '#93B51D 30%, #93B51D 35%, #C99397 35%, #C99397 40%, #70C2E5 40%, #70C2E5 45%, ' +
+  '#BCE4F7 45%, #BCE4F7 50%, #3B83D2 50%, #3B83D2 55%, #E96997 55%, #E96997 60%, ' +
+  '#DEB086 60%, #DEB086 65%, #C77341 65%, #C77341 70%, #6D7F2F 70%, #6D7F2F 75%, ' +
+  '#EC897B 75%, #EC897B 80%, #AE485C 80%, #AE485C 85%, #CC08C9 85%, #CC08C9 90%, ' +
+  '#C04277 90%, #C04277 95%, #A74B89 95%, #A74B89 100%)';
+
 type NavLinks = {
   label: string;
   icon: React.ReactNode;
@@ -318,13 +328,28 @@ export default function Layout() {
           header={{ height: 60 }}
           footer={{ height: { base: 0.1 } }}
         >
-          <AppShell.Header px='md'>
+          <AppShell.Header
+            px='md'
+            style={{ backgroundColor: colorScheme === 'dark' ? '#135aa1' : '#1976d2', borderBottom: 'none' }}
+          >
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: -5,
+                height: 5,
+                pointerEvents: 'none',
+                background: SUNAMO_COLOR_BAR,
+              }}
+            />
             <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
               <Burger
                 opened={opened}
                 onClick={() => setOpened((o) => !o)}
                 size='sm'
-                color={theme.colors.gray[6]}
+                color='white'
                 mr='xl'
                 hiddenFrom='sm'
                 bdrs='md'
@@ -340,7 +365,7 @@ export default function Layout() {
                 />
               )}
 
-              <Title visibleFrom='sm' lineClamp={1} size={32}>
+              <Title visibleFrom='sm' lineClamp={1} size={32} c='white'>
                 {config.website.title.trim()}
               </Title>
 
@@ -351,7 +376,7 @@ export default function Layout() {
                   <Menu.Target>
                     <Button
                       variant='transparent'
-                      color={colorScheme === 'dark' ? 'white' : 'black'}
+                      color='white'
                       leftSection={
                         avatar ? (
                           <Avatar
