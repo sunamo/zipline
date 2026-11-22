@@ -1,5 +1,4 @@
 import type { Response } from '@/lib/api/response';
-import useAvatar from '@/lib/client/hooks/useAvatar';
 import useLogin from '@/lib/client/hooks/useLogin';
 import { useLogout } from '@/lib/client/hooks/useLogout';
 import { useSettingsStore } from '@/lib/client/store/settings';
@@ -14,11 +13,9 @@ import {
   AppShell,
   Avatar,
   Box,
-  Button,
   Divider,
   Drawer,
   Group,
-  Menu,
   NavLink,
   Paper,
   ScrollArea,
@@ -34,7 +31,6 @@ import { useModals } from '@mantine/modals';
 import { showNotification } from '@mantine/notifications';
 import {
   IconAdjustments,
-  IconChevronDown,
   IconChevronRight,
   IconClipboardCopy,
   IconExternalLink,
@@ -287,7 +283,6 @@ export default function Layout() {
   const config = loaderData.config;
 
   const { user, mutate } = useLogin();
-  const { avatar } = useAvatar();
 
   const [prev, setPrev] = useState(location.pathname);
   if (prev !== location.pathname) {
@@ -428,78 +423,6 @@ export default function Layout() {
                   </ActionIcon>
                 </Tooltip>
               </Group>
-
-              <Group gap='xs' wrap='nowrap' style={{ marginLeft: 'auto' }}>
-                <Menu shadow='md' width={200}>
-                  <Menu.Target>
-                    <Button
-                      variant='transparent'
-                      color='white'
-                      leftSection={
-                        avatar ? (
-                          <Avatar
-                            src={avatar}
-                            radius='sm'
-                            size='sm'
-                            alt={user?.username ?? t('header.avatarAlt')}
-                          />
-                        ) : (
-                          <IconSettingsFilled size='1rem' />
-                        )
-                      }
-                      rightSection={<IconChevronDown size='0.7rem' />}
-                      size='sm'
-                    >
-                      {user?.username}
-                    </Button>
-                  </Menu.Target>
-
-                  <Menu.Dropdown>
-                    <Menu.Label>
-                      {isAdministrator(user?.role)
-                        ? t('userMenu.administratorLabel', { username: user?.username })
-                        : user?.username}
-                    </Menu.Label>
-
-                    <Menu.Item leftSection={<IconClipboardCopy size='1rem' />} onClick={copyToken}>
-                      {t('userMenu.copyToken')}
-                    </Menu.Item>
-                    <Menu.Item
-                      color='red'
-                      leftSection={<IconRefreshDot size='1rem' />}
-                      onClick={refreshToken}
-                    >
-                      {t('userMenu.refreshToken')}
-                    </Menu.Item>
-                    <Menu.Divider />
-
-                    <Menu.Item
-                      leftSection={<IconSettingsFilled size='1rem' />}
-                      component={Link}
-                      to='/dashboard/settings'
-                      prefetch='intent'
-                    >
-                      {t('userMenu.settings')}
-                    </Menu.Item>
-
-                    {user?.role === 'SUPERADMIN' && (
-                      <Menu.Item
-                        leftSection={<IconAdjustments size='1rem' />}
-                        component={Link}
-                        to='/dashboard/admin/settings'
-                        prefetch='intent'
-                      >
-                        {t('userMenu.serverSettings')}
-                      </Menu.Item>
-                    )}
-
-                    <Menu.Divider />
-                    <Menu.Item color='red' leftSection={<IconLogout size='1rem' />} onClick={logout}>
-                      {t('userMenu.logout')}
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </Group>
             </div>
           </AppShell.Header>
 
@@ -540,6 +463,56 @@ export default function Layout() {
                     { value: 'auto', label: t('menu.themeAuto') },
                   ]}
                 />
+              </div>
+
+              <div>
+                <Text size='sm' fw={500} mb={4}>
+                  {isAdministrator(user?.role)
+                    ? t('userMenu.administratorLabel', { username: user?.username })
+                    : user?.username}
+                </Text>
+                <Stack gap={0}>
+                  <NavLink
+                    label={t('userMenu.copyToken')}
+                    leftSection={<IconClipboardCopy size='1rem' />}
+                    onClick={() => {
+                      setMenuOpened(false);
+                      copyToken();
+                    }}
+                  />
+                  <NavLink
+                    label={t('userMenu.refreshToken')}
+                    color='red'
+                    c='red'
+                    leftSection={<IconRefreshDot size='1rem' />}
+                    onClick={() => {
+                      setMenuOpened(false);
+                      refreshToken();
+                    }}
+                  />
+                  <NavLink
+                    label={t('userMenu.settings')}
+                    leftSection={<IconSettingsFilled size='1rem' />}
+                    component={Link}
+                    to='/dashboard/settings'
+                    onClick={() => setMenuOpened(false)}
+                  />
+                  {user?.role === 'SUPERADMIN' && (
+                    <NavLink
+                      label={t('userMenu.serverSettings')}
+                      leftSection={<IconAdjustments size='1rem' />}
+                      component={Link}
+                      to='/dashboard/admin/settings'
+                      onClick={() => setMenuOpened(false)}
+                    />
+                  )}
+                  <NavLink
+                    label={t('userMenu.logout')}
+                    c='red'
+                    leftSection={<IconLogout size='1rem' />}
+                    onClick={logout}
+                  />
+                </Stack>
               </div>
 
               <Box hiddenFrom='sm' onClick={() => setMenuOpened(false)}>
