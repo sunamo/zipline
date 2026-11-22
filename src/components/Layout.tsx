@@ -20,7 +20,6 @@ import {
   ScrollArea,
   Title,
   useMantineColorScheme,
-  useMantineTheme,
 } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { useModals } from '@mantine/modals';
@@ -241,7 +240,6 @@ const renderLinks = (
 
 export default function Layout() {
   const { t } = useTranslation(['layout', 'common', 'serverSettings']);
-  const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const [opened, setOpened] = useState(false);
   const modals = useModals();

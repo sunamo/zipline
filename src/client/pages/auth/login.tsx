@@ -59,12 +59,11 @@ export default function Login() {
 
   const { data: config, error: configError, isLoading: configLoading } = useSWR('/api/server/public');
 
-  const showLocalLogin =
-    query.get('local') === 'true' ||
-    !(
-      config?.oauth?.bypassLocalLogin &&
-      Object.values(config?.oauthEnabled ?? {}).filter((x) => x === true).length > 0
-    );
+  // The password form is only for the emergency admin account (?local=true) and right after logout;
+  // every other visit goes straight to the central npe login.
+  const useNpeRedirect = query.get('local') !== 'true' && query.get('logged_out') !== 'true';
+
+  const showLocalLogin = !useNpeRedirect;
 
   const willRedirect =
     config?.oauth?.bypassLocalLogin &&
@@ -72,6 +71,10 @@ export default function Login() {
     Object.values(config?.oauthEnabled ?? {}).filter((x) => x === true).length === 1 &&
     query.get('local') !== 'true' &&
     query.get('logged_out') !== 'true';
+
+  useEffect(() => {
+    if (useNpeRedirect && config && !config.firstSetup) window.location.replace('/api/auth/npe');
+  }, [useNpeRedirect, config]);
 
   useEffect(() => {
     if (willRedirect && config) {
