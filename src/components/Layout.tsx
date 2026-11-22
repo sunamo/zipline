@@ -1,4 +1,5 @@
 import type { Response } from '@/lib/api/response';
+import useAvatar from '@/lib/client/hooks/useAvatar';
 import useLogin from '@/lib/client/hooks/useLogin';
 import { useLogout } from '@/lib/client/hooks/useLogout';
 import { useSettingsStore } from '@/lib/client/store/settings';
@@ -12,6 +13,7 @@ import {
   ActionIcon,
   AppShell,
   Avatar,
+  Button,
   Box,
   Divider,
   Drawer,
@@ -41,7 +43,6 @@ import {
   IconGraph,
   IconHome,
   IconLink,
-  IconLogout,
   IconMenu2,
   IconRefreshDot,
   IconSettingsFilled,
@@ -53,7 +54,7 @@ import {
   IconWorld,
 } from '@tabler/icons-react';
 import type { TFunction } from 'i18next';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavigateFunction, Outlet, useLoaderData, useLocation, useNavigate } from 'react-router-dom';
 import type { dashboardLoader } from '../client/routes';
@@ -272,6 +273,13 @@ export default function Layout() {
       choice === 'auto' ? 'system' : choice === 'dark' ? 'builtin:dark_blue' : 'builtin:light_blue',
     );
   };
+  // npe appends the shared login to the URL hash after sign-in; drop it so the token does not stay in the address bar
+  useEffect(() => {
+    if (/authToken=|authMail=/.test(window.location.hash)) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
   const modals = useModals();
   const clipboard = useClipboard();
   const setUser = useUserStore((s) => s.setUser);
@@ -283,6 +291,7 @@ export default function Layout() {
   const config = loaderData.config;
 
   const { user, mutate } = useLogin();
+  const { avatar } = useAvatar();
 
   const [prev, setPrev] = useState(location.pathname);
   if (prev !== location.pathname) {
@@ -352,7 +361,7 @@ export default function Layout() {
       <DashboardUpload>
         <AppShell
           navbar={{ breakpoint: 'sm', width: { sm: 200, lg: 230 }, collapsed: { mobile: !opened } }}
-          header={{ height: 60 }}
+          header={{ height: 64 }}
           footer={{ height: { base: 0.1 } }}
         >
           <AppShell.Header
@@ -400,7 +409,7 @@ export default function Layout() {
                     component='a'
                     href={`${npeRootUrl()}/${urlLocale}`}
                     variant='subtle'
-                    color='white'
+                    color='#008000'
                     size='lg'
                     radius='xl'
                     aria-label={t('menu.allSites')}
@@ -414,7 +423,7 @@ export default function Layout() {
                     component={Link}
                     to='/dashboard'
                     variant='subtle'
-                    color='white'
+                    color='#008000'
                     size='lg'
                     radius='xl'
                     aria-label={t('menu.home')}
@@ -422,6 +431,37 @@ export default function Layout() {
                     <IconHome size='1.4rem' />
                   </ActionIcon>
                 </Tooltip>
+              </Group>
+
+              <Group gap={4} wrap='nowrap' style={{ marginLeft: 'auto' }}>
+                <ActionIcon
+                  component='a'
+                  href={`${npeRootUrl()}/${urlLocale}/profile`}
+                  variant='subtle'
+                  size='xl'
+                  radius='xl'
+                  aria-label={user?.username ?? t('header.avatarAlt')}
+                >
+                  {avatar ? (
+                    <Avatar
+                      src={avatar}
+                      radius='xl'
+                      size={36}
+                      alt={user?.username ?? t('header.avatarAlt')}
+                    />
+                  ) : (
+                    <IconSettingsFilled size='1.4rem' color='white' />
+                  )}
+                </ActionIcon>
+                <Button
+                  variant='subtle'
+                  color='white'
+                  radius='xl'
+                  rightSection={<IconChevronRight size='1rem' />}
+                  onClick={logout}
+                >
+                  {t('userMenu.logout')}
+                </Button>
               </Group>
             </div>
           </AppShell.Header>
@@ -506,12 +546,6 @@ export default function Layout() {
                       onClick={() => setMenuOpened(false)}
                     />
                   )}
-                  <NavLink
-                    label={t('userMenu.logout')}
-                    c='red'
-                    leftSection={<IconLogout size='1rem' />}
-                    onClick={logout}
-                  />
                 </Stack>
               </div>
 
