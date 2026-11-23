@@ -66,6 +66,8 @@ const SCZ_BUTTON_CSS = `
 .scz-btn:hover::before{opacity:.16}
 .scz-btn:focus-visible::before{opacity:.22}
 .scz-btn:active::before{opacity:.28}
+.scz-btn-link{color:#008000}
+.scz-btn-link:hover{color:hotpink;transition:color .9s}
 .scz-drawer .scz-btn::before{background:currentColor}
 .scz-drawer .scz-btn:hover::before{opacity:.08}
 .scz-drawer{margin-left:16px;overflow-y:auto;height:100vh}
@@ -477,8 +479,7 @@ export default function Layout() {
               </button>
 
               <a
-                className='scz-btn'
-                style={{ color: '#008000' }}
+                className='scz-btn scz-btn-link'
                 href={`${npeRootUrl()}/${urlLocale}`}
                 title={t('menu.allSites')}
                 aria-label={t('menu.allSites')}
@@ -488,8 +489,7 @@ export default function Layout() {
 
               {location.pathname !== '/dashboard' && (
                 <Link
-                  className='scz-btn'
-                  style={{ color: '#008000' }}
+                  className='scz-btn scz-btn-link'
                   to='/dashboard'
                   title={t('menu.home')}
                   aria-label={t('menu.home')}
