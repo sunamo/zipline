@@ -1,5 +1,6 @@
 import { useSettingsStore } from '@/lib/client/store/settings';
 import dayjs from 'dayjs';
+import 'dayjs/locale/cs';
 import 'dayjs/locale/de';
 import 'dayjs/locale/es';
 import 'dayjs/locale/fr';
@@ -22,6 +23,7 @@ import {
   matchLanguage,
 } from './languages';
 import { Resources, resources } from './resources';
+import { localeFromPath } from './urlLocale';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -38,6 +40,10 @@ function readStoredLanguage(): Language | null {
 // the server always renders english, the browser picks: stored choice > browser languages > english
 export function detectLanguage(): Language {
   if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
+
+  // the language token in the URL (/cs/..., /en/...) always wins
+  const fromUrl = localeFromPath(window.location.pathname);
+  if (fromUrl) return fromUrl;
 
   const stored = readStoredLanguage();
   if (stored) return stored;

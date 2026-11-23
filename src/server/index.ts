@@ -68,6 +68,12 @@ async function main() {
     routerOptions: {
       maxParamLength: 1024,
     },
+    // pages are served under a language token (/cs/dashboard, /en/dashboard); routing ignores it
+    rewriteUrl: (req) => {
+      const url = req.url ?? '/';
+
+      return /^\/(cs|en)(?=\/|\?|$)/.test(url) ? url.replace(/^\/(cs|en)/, '') || '/' : url;
+    },
   }).withTypeProvider<ZodTypeProvider>();
 
   await registerPlugins(server);

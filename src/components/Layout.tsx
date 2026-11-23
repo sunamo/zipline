@@ -2,32 +2,30 @@ import type { Response } from '@/lib/api/response';
 import useAvatar from '@/lib/client/hooks/useAvatar';
 import useLogin from '@/lib/client/hooks/useLogin';
 import { useLogout } from '@/lib/client/hooks/useLogout';
+import { useSettingsStore } from '@/lib/client/store/settings';
 import { useUserStore } from '@/lib/client/store/user';
+import { currentLanguage, setLanguage } from '@/lib/i18n';
+import { stripLocale, toUrlLocale, type UrlLocale } from '@/lib/i18n/urlLocale';
 import type { SafeConfig } from '@/lib/config/safe';
+import { SUNAMO_SITES, type SunamoSite } from '@/lib/sunamoSites';
 import { fetchApi } from '@/lib/fetchApi';
 import { isAdministrator } from '@/lib/role';
 import {
   AppShell,
-  Avatar,
   Box,
-  Burger,
-  Button,
   Divider,
-  Group,
-  Menu,
+  Drawer,
   NavLink,
   Paper,
   ScrollArea,
   Title,
   useMantineColorScheme,
-  useMantineTheme,
 } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { useModals } from '@mantine/modals';
 import { showNotification } from '@mantine/notifications';
 import {
   IconAdjustments,
-  IconChevronDown,
   IconChevronRight,
   IconClipboardCopy,
   IconExternalLink,
@@ -38,7 +36,7 @@ import {
   IconGraph,
   IconHome,
   IconLink,
-  IconLogout,
+  IconMenu2,
   IconRefreshDot,
   IconSettingsFilled,
   IconShieldLockFilled,
@@ -46,17 +44,48 @@ import {
   IconTags,
   IconUpload,
   IconUsersGroup,
+  IconMoon,
+  IconSun,
+  IconUserCircle,
+  IconWorld,
 } from '@tabler/icons-react';
 import type { TFunction } from 'i18next';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavigateFunction, Outlet, useLoaderData, useLocation, useNavigate } from 'react-router-dom';
 import type { dashboardLoader } from '../client/routes';
 import ConfigProvider from './ConfigProvider';
-import LanguageSelect from './LanguageSelect';
 import VersionBadge from './VersionBadge';
 import DashboardUpload from './upload/DashboardUpload';
 import { SETTINGS_EXTERNAL_LINKS } from './pages/serverSettings';
+
+// Same colour strip as the other sunamo.cz sites (--scz-color-bar in fluent-base.css).
+const SUNAMO_COLOR_BAR =
+  'linear-gradient(to right, #0B0B3F 0%, #0B0B3F 5%, #BB4C2E 5%, #BB4C2E 10%, #20096E 10%, #20096E 15%, ' +
+  '#8F750D 15%, #8F750D 20%, #008E40 20%, #008E40 25%, #76D9DE 25%, #76D9DE 30%, ' +
+  '#93B51D 30%, #93B51D 35%, #C99397 35%, #C99397 40%, #70C2E5 40%, #70C2E5 45%, ' +
+  '#BCE4F7 45%, #BCE4F7 50%, #3B83D2 50%, #3B83D2 55%, #E96997 55%, #E96997 60%, ' +
+  '#DEB086 60%, #DEB086 65%, #C77341 65%, #C77341 70%, #6D7F2F 70%, #6D7F2F 75%, ' +
+  '#EC897B 75%, #EC897B 80%, #AE485C 80%, #AE485C 85%, #CC08C9 85%, #CC08C9 90%, ' +
+  '#C04277 90%, #C04277 95%, #A74B89 95%, #A74B89 100%)';
+
+// Button look of the Vuetify toolbar on the other sunamo.cz sites (36 px high, pill, 8 % hover overlay).
+const SCZ_BUTTON_CSS = `
+.scz-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:64px;height:36px;padding:0 16px;border:0;border-radius:24px;background:transparent;color:#fff;font:500 14px/1 inherit;font-family:inherit;letter-spacing:.1px;text-decoration:none;cursor:pointer;transition:box-shadow .28s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1),opacity .28s cubic-bezier(.4,0,.2,1),background .28s cubic-bezier(.4,0,.2,1)}
+.scz-btn::before{content:'';position:absolute;inset:0;border-radius:inherit;background:currentColor;opacity:0;transition:opacity .2s ease-in-out;pointer-events:none}
+.scz-btn:hover::before{opacity:.08}
+.scz-btn:focus-visible::before{opacity:.12}
+.scz-btn:active::before{opacity:.16}
+.scz-drawer{margin-left:16px;overflow-y:auto;height:100vh}
+.scz-nav-list{list-style:none;padding:0;margin:8px 0 0 0}
+.scz-nav-link{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:6px 10px;border-radius:6px;text-decoration:none;color:inherit;font-size:.95rem;cursor:pointer;transition:background-color .15s ease,padding-left .15s ease}
+.scz-nav-link:hover{background-color:rgba(25,118,210,.1);padding-left:14px}
+.scz-nav-link svg{width:19px;height:19px;flex:0 0 auto}
+`;
+
+// Central npe site (root of all sunamo sites): local FE port 4005 on localhost, sunamo.cz otherwise.
+const npeRootUrl = () =>
+  window.location.hostname === 'localhost' ? 'http://localhost:4005' : 'https://sunamo.cz';
 
 type NavLinks = {
   label: string;
@@ -229,11 +258,118 @@ const renderLinks = (
   });
 };
 
+function DrawerSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <h3 style={{ display: 'block', margin: '30px 0', font: 'inherit' }}>
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <span style={{ color: 'var(--scz-heading-color, #000)', fontSize: '1.25rem', fontWeight: 700 }}>
+            {title}
+          </span>
+          <span
+            style={{
+              position: 'absolute',
+              bottom: -4,
+              left: 0,
+              width: '100%',
+              height: 4,
+              background: 'linear-gradient(to right, #ef4444, #fb923c, #ca8a04)',
+              borderRadius: 9999,
+            }}
+          />
+        </div>
+      </h3>
+      <div style={{ marginLeft: 20, marginTop: 8 }}>{children}</div>
+    </div>
+  );
+}
+
+const renderSites = (sites: SunamoSite[]) => {
+  const local = window.location.hostname === 'localhost';
+  const locale = toUrlLocale(currentLanguage());
+
+  return sites.map((site) => (
+    <li key={site.short}>
+      <a
+        className='scz-nav-link'
+        href={local ? `http://localhost:${site.localPort}/${locale}/` : `https://${site.prodHost}/${locale}/`}
+      >
+        <img
+          src={`https://${site.prodHost}/favicon.ico`}
+          alt=''
+          width={20}
+          height={20}
+          loading='lazy'
+          style={{ flex: '0 0 auto', objectFit: 'contain' }}
+          onError={(event) => ((event.target as HTMLImageElement).style.visibility = 'hidden')}
+        />
+        <span>{local ? site.short : site.prodHost}</span>
+      </a>
+    </li>
+  ));
+};
+
+// flat drawer list of the dashboard navigation (children indented)
+const renderDrawerLinks = (
+  links: NavLinks[],
+  user: Response['/api/user']['user'],
+  config: SafeConfig,
+  depth: number,
+): React.ReactNode[] =>
+  links.flatMap((link) => {
+    if (link.if && !link.if(user as Response['/api/user']['user'], config)) return [];
+
+    const row = (
+      <li key={`${depth}-${link.href ?? link.label}`} style={{ marginLeft: depth * 16 }}>
+        {link.href ? (
+          <Link className='scz-nav-link' to={link.href}>
+            {link.icon}
+            {link.label}
+          </Link>
+        ) : (
+          <span className='scz-nav-link' style={{ opacity: 0.7 }}>
+            {link.icon}
+            {link.label}
+          </span>
+        )}
+      </li>
+    );
+
+    return [row, ...renderDrawerLinks(link.links ?? [], user, config, depth + 1)];
+  });
+
 export default function Layout() {
   const { t } = useTranslation(['layout', 'common', 'serverSettings']);
-  const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const [opened, setOpened] = useState(false);
+  const [menuOpened, setMenuOpened] = useState(false);
+  const urlLocale = toUrlLocale(currentLanguage());
+  const themeSetting = useSettingsStore((state) => state.settings.theme);
+  const updateSetting = useSettingsStore((state) => state.update);
+  const themeChoice = themeSetting === 'system' ? 'auto' : colorScheme === 'dark' ? 'dark' : 'light';
+
+  // language lives in the URL token, so switching it means opening the same page under the other token
+  const switchLanguage = (lng: string) => {
+    const locale = toUrlLocale(lng) as UrlLocale;
+    setLanguage(locale);
+    window.location.assign(
+      `/${locale}${stripLocale(window.location.pathname)}${window.location.search}${window.location.hash}`,
+    );
+  };
+
+  const switchTheme = (choice: string) => {
+    updateSetting(
+      'theme',
+      choice === 'auto' ? 'system' : choice === 'dark' ? 'builtin:dark_blue' : 'builtin:light_blue',
+    );
+  };
+  // npe appends the shared login to the URL hash after sign-in; drop it so the token does not stay in the address bar
+  useEffect(() => {
+    if (/authToken=|authMail=/.test(window.location.hash)) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
   const modals = useModals();
   const clipboard = useClipboard();
   const setUser = useUserStore((s) => s.setUser);
@@ -312,113 +448,250 @@ export default function Layout() {
 
   return (
     <ConfigProvider data={loaderData}>
+      <style>{SCZ_BUTTON_CSS}</style>
       <DashboardUpload>
         <AppShell
           navbar={{ breakpoint: 'sm', width: { sm: 200, lg: 230 }, collapsed: { mobile: !opened } }}
-          header={{ height: 60 }}
+          header={{ height: 64 }}
           footer={{ height: { base: 0.1 } }}
         >
-          <AppShell.Header px='md'>
+          <AppShell.Header
+            px={0}
+            style={{ backgroundColor: colorScheme === 'dark' ? '#135aa1' : '#1976d2', borderBottom: 'none' }}
+          >
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: -5,
+                height: 5,
+                pointerEvents: 'none',
+                background: SUNAMO_COLOR_BAR,
+              }}
+            />
             <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-              <Burger
-                opened={opened}
-                onClick={() => setOpened((o) => !o)}
-                size='sm'
-                color={theme.colors.gray[6]}
-                mr='xl'
-                hiddenFrom='sm'
-                bdrs='md'
-              />
+              <button
+                type='button'
+                className='scz-btn'
+                style={{ marginLeft: 4 }}
+                aria-label={t('menu.open')}
+                onClick={() => setMenuOpened(true)}
+              >
+                <IconMenu2 size={24} />
+              </button>
 
-              {config.website.titleLogo && (
-                <Avatar
-                  src={config.website.titleLogo}
-                  alt={t('header.logoAlt')}
-                  radius='sm'
-                  size='md'
-                  mr='md'
-                />
+              <a
+                className='scz-btn'
+                style={{ color: '#008000' }}
+                href={`${npeRootUrl()}/${urlLocale}`}
+                title={t('menu.allSites')}
+                aria-label={t('menu.allSites')}
+              >
+                <IconWorld size={24} />
+              </a>
+
+              {location.pathname !== '/dashboard' && (
+                <Link
+                  className='scz-btn'
+                  style={{ color: '#008000' }}
+                  to='/dashboard'
+                  title={t('menu.home')}
+                  aria-label={t('menu.home')}
+                >
+                  <IconHome size={24} />
+                </Link>
               )}
 
-              <Title visibleFrom='sm' lineClamp={1} size={32}>
-                {config.website.title.trim()}
-              </Title>
-
-              <Group gap='xs' wrap='nowrap' style={{ marginLeft: 'auto' }}>
-                <LanguageSelect />
-
-                <Menu shadow='md' width={200}>
-                  <Menu.Target>
-                    <Button
-                      variant='transparent'
-                      color={colorScheme === 'dark' ? 'white' : 'black'}
-                      leftSection={
-                        avatar ? (
-                          <Avatar
-                            src={avatar}
-                            radius='sm'
-                            size='sm'
-                            alt={user?.username ?? t('header.avatarAlt')}
-                          />
-                        ) : (
-                          <IconSettingsFilled size='1rem' />
-                        )
-                      }
-                      rightSection={<IconChevronDown size='0.7rem' />}
-                      size='sm'
-                    >
-                      {user?.username}
-                    </Button>
-                  </Menu.Target>
-
-                  <Menu.Dropdown>
-                    <Menu.Label>
-                      {isAdministrator(user?.role)
-                        ? t('userMenu.administratorLabel', { username: user?.username })
-                        : user?.username}
-                    </Menu.Label>
-
-                    <Menu.Item leftSection={<IconClipboardCopy size='1rem' />} onClick={copyToken}>
-                      {t('userMenu.copyToken')}
-                    </Menu.Item>
-                    <Menu.Item
-                      color='red'
-                      leftSection={<IconRefreshDot size='1rem' />}
-                      onClick={refreshToken}
-                    >
-                      {t('userMenu.refreshToken')}
-                    </Menu.Item>
-                    <Menu.Divider />
-
-                    <Menu.Item
-                      leftSection={<IconSettingsFilled size='1rem' />}
-                      component={Link}
-                      to='/dashboard/settings'
-                      prefetch='intent'
-                    >
-                      {t('userMenu.settings')}
-                    </Menu.Item>
-
-                    {user?.role === 'SUPERADMIN' && (
-                      <Menu.Item
-                        leftSection={<IconAdjustments size='1rem' />}
-                        component={Link}
-                        to='/dashboard/admin/settings'
-                        prefetch='intent'
-                      >
-                        {t('userMenu.serverSettings')}
-                      </Menu.Item>
-                    )}
-
-                    <Menu.Divider />
-                    <Menu.Item color='red' leftSection={<IconLogout size='1rem' />} onClick={logout}>
-                      {t('userMenu.logout')}
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
-              </Group>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto', marginRight: 4 }}
+              >
+                <a
+                  className='scz-btn'
+                  href={`${npeRootUrl()}/${urlLocale}/profile`}
+                  aria-label={user?.username ?? t('header.avatarAlt')}
+                >
+                  {avatar ? (
+                    <img
+                      src={avatar}
+                      alt=''
+                      style={{
+                        width: 36,
+                        height: 36,
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        display: 'block',
+                      }}
+                    />
+                  ) : (
+                    <IconUserCircle size={36} />
+                  )}
+                </a>
+                <button type='button' className='scz-btn' onClick={logout}>
+                  {t('userMenu.logout')}
+                  <IconChevronRight size={18} style={{ marginLeft: 8 }} />
+                </button>
+              </div>
             </div>
           </AppShell.Header>
+
+          <Drawer
+            opened={menuOpened}
+            onClose={() => setMenuOpened(false)}
+            position='left'
+            size={256}
+            padding={0}
+            withCloseButton={false}
+            overlayProps={{ color: '#000', opacity: 0.2 }}
+            transitionProps={{ duration: 200 }}
+            styles={{
+              content: {
+                backgroundColor: colorScheme === 'dark' ? '#212121' : '#ffffff',
+                color: colorScheme === 'dark' ? '#ffffff' : 'rgba(0,0,0,0.87)',
+                fontFamily: 'Roboto, sans-serif',
+                boxShadow: '0 2px 3px rgba(0,0,0,.3), 0 6px 10px 4px rgba(0,0,0,.15)',
+              },
+              body: { padding: 0 },
+            }}
+          >
+            <div
+              className='scz-drawer'
+              style={
+                { '--scz-heading-color': colorScheme === 'dark' ? '#fff' : '#000' } as React.CSSProperties
+              }
+              onClick={(event) => {
+                if ((event.target as HTMLElement).closest('a[href]:not([href="#"])')) setMenuOpened(false);
+              }}
+            >
+              <DrawerSection title={t('menu.navigation')}>
+                <ul className='scz-nav-list'>
+                  {renderDrawerLinks(buildNavLinks(t), user as Response['/api/user']['user'], config, 0)}
+                </ul>
+              </DrawerSection>
+
+              <DrawerSection
+                title={
+                  isAdministrator(user?.role)
+                    ? t('userMenu.administratorLabel', { username: user?.username })
+                    : (user?.username ?? '')
+                }
+              >
+                <ul className='scz-nav-list'>
+                  <li>
+                    <a
+                      className='scz-nav-link'
+                      href='#'
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setMenuOpened(false);
+                        copyToken();
+                      }}
+                    >
+                      <IconClipboardCopy size={19} />
+                      {t('userMenu.copyToken')}
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      className='scz-nav-link'
+                      style={{ color: '#fa5252' }}
+                      href='#'
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setMenuOpened(false);
+                        refreshToken();
+                      }}
+                    >
+                      <IconRefreshDot size={19} />
+                      {t('userMenu.refreshToken')}
+                    </a>
+                  </li>
+                  <li>
+                    <Link className='scz-nav-link' to='/dashboard/settings'>
+                      <IconSettingsFilled size={19} />
+                      {t('userMenu.settings')}
+                    </Link>
+                  </li>
+                  {user?.role === 'SUPERADMIN' && (
+                    <li>
+                      <Link className='scz-nav-link' to='/dashboard/admin/settings'>
+                        <IconAdjustments size={19} />
+                        {t('userMenu.serverSettings')}
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </DrawerSection>
+
+              <DrawerSection title={t('menu.language')}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <span
+                    style={{ cursor: 'pointer', opacity: urlLocale === 'en' ? 1 : 0.5 }}
+                    onClick={() => switchLanguage('en')}
+                    title='English'
+                  >
+                    <svg width='32' height='21' viewBox='0 0 60 30' role='img' aria-label='English'>
+                      <rect width='60' height='30' fill='#012169' />
+                      <path d='M0,0 L60,30 M60,0 L0,30' stroke='#fff' strokeWidth='6' />
+                      <path d='M0,0 L60,30 M60,0 L0,30' stroke='#C8102E' strokeWidth='2' />
+                      <path d='M30,0 V30 M0,15 H60' stroke='#fff' strokeWidth='10' />
+                      <path d='M30,0 V30 M0,15 H60' stroke='#C8102E' strokeWidth='6' />
+                    </svg>
+                  </span>
+                  <span
+                    style={{ cursor: 'pointer', opacity: urlLocale === 'cs' ? 1 : 0.5 }}
+                    onClick={() => switchLanguage('cs')}
+                    title='Čeština'
+                  >
+                    <svg width='32' height='21' viewBox='0 0 60 30' role='img' aria-label='Čeština'>
+                      <rect width='60' height='30' fill='#fff' />
+                      <rect y='15' width='60' height='15' fill='#D7141A' />
+                      <path d='M0,0 L30,15 L0,30 Z' fill='#11457E' />
+                    </svg>
+                  </span>
+                </div>
+              </DrawerSection>
+
+              <DrawerSection title={t('menu.theme')}>
+                <button
+                  type='button'
+                  className='scz-btn'
+                  style={{ color: 'inherit' }}
+                  onClick={() => switchTheme(themeChoice === 'dark' ? 'light' : 'dark')}
+                >
+                  {themeChoice === 'dark' ? (
+                    <IconSun size={18} style={{ marginRight: 8 }} />
+                  ) : (
+                    <IconMoon size={18} style={{ marginRight: 8 }} />
+                  )}
+                  {themeChoice === 'dark' ? t('menu.themeLight') : t('menu.themeDark')}
+                </button>
+                {themeChoice !== 'auto' && (
+                  <button
+                    type='button'
+                    className='scz-btn'
+                    style={{ color: 'inherit' }}
+                    onClick={() => switchTheme('auto')}
+                  >
+                    {t('menu.themeAuto')}
+                  </button>
+                )}
+              </DrawerSection>
+
+              <DrawerSection title={t('menu.mySites')}>
+                <ul className='scz-nav-list'>{renderSites(SUNAMO_SITES.filter((site) => !site.isApp))}</ul>
+              </DrawerSection>
+
+              <DrawerSection title={t('menu.myApps')}>
+                <ul className='scz-nav-list'>{renderSites(SUNAMO_SITES.filter((site) => site.isApp))}</ul>
+              </DrawerSection>
+
+              <div style={{ marginTop: 24, marginBottom: 16, fontSize: 11, opacity: 0.5, lineHeight: 1.6 }}>
+                <VersionBadge />
+              </div>
+            </div>
+          </Drawer>
 
           <AppShell.Navbar hidden={!opened} zIndex={90}>
             <Title hiddenFrom='sm' size={24} m='sm' style={{ marginBottom: 20 }}>

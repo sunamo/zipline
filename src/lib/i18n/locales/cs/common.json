@@ -1,0 +1,34 @@
+{
+  "actions": {
+    "cancel": "Zrušit",
+    "save": "Uložit",
+    "delete": "Smazat",
+    "close": "Zavřít",
+    "ok": "OK",
+    "yes": "Ano",
+    "no": "Ne",
+    "edit": "Upravit",
+    "create": "Vytvořit",
+    "copy": "Kopírovat",
+    "remove": "Odebrat",
+    "download": "Stáhnout",
+    "upload": "Nahrát",
+    "refresh": "Obnovit",
+    "open": "Otevřít",
+    "continue": "Pokračovat"
+  },
+  "status": {
+    "loading": "Načítání...",
+    "error": "Chyba",
+    "enabled": "Zapnuto"
+  },
+  "warning": {
+    "title": "Jste si jistí?"
+  },
+  "language": {
+    "label": "Jazyk"
+  },
+  "table": {
+    "noRecords": "Žádné záznamy"
+  }
+}

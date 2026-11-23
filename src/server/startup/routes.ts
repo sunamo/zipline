@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { urls } from '@/lib/db/schema';
 import { log } from '@/lib/logger';
+import { npeEnabled } from '@/lib/npe';
 import { formatRootUrl } from '@/lib/url';
 import { eq, or } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
@@ -45,6 +46,20 @@ export async function registerRoutes(server: FastifyInstance, mode: string) {
     server.get(config.files.route === '/' ? '/:id' : `${config.files.route}/:id`, filesRoute);
     server.get(config.urls.route === '/' ? '/:id' : `${config.urls.route}/:id`, urlsRoute);
   }
+
+  // The login page is never shown on its own: every visit goes to the central npe login.
+  // ?local=true (emergency admin account) and ?logged_out=true (right after logout) keep the form.
+  server.addHook('onRequest', async (req, res) => {
+    if (req.method !== 'GET' || !npeEnabled()) return;
+
+    const [path, query = ''] = req.url.split('?');
+    if (path !== '/auth/login' && path !== '/auth/login/') return;
+
+    const params = new URLSearchParams(query);
+    if (params.get('local') === 'true' || params.get('logged_out') === 'true') return;
+
+    return res.redirect('/api/auth/npe');
+  });
 
   const routes = await loadRoutes();
   const routePlugins = Object.values(routes);

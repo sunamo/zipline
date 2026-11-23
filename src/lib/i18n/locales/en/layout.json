@@ -120,5 +120,19 @@
     "users": "Users",
     "userFiles": "{{username}}'s files",
     "unknownUserFiles": "User's files"
+  },
+  "menu": {
+    "open": "Open menu",
+    "title": "Menu",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeAuto": "Auto",
+    "allSites": "All sunamo sites",
+    "home": "Home",
+    "navigation": "Navigation",
+    "mySites": "My sites",
+    "myApps": "My apps"
   }
 }

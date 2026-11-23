@@ -4,6 +4,7 @@ import { users } from '@/lib/db/schema';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import { eq } from 'drizzle-orm';
+import { createHash } from 'crypto';
 import z from 'zod';
 
 export type ApiUserAvatarResponse = string;
@@ -25,14 +26,21 @@ export default typedPlugin(
       },
       async (req, res) => {
         const [user] = await db
-          .select({ avatar: users.avatar })
+          .select({ avatar: users.avatar, username: users.username })
           .from(users)
           .where(eq(users.id, req.user.id))
           .limit(1);
 
-        if (!user?.avatar) throw new ApiError(9002);
+        if (user?.avatar) return res.send(user.avatar);
 
-        return res.send(user.avatar);
+        // Sunamo accounts are e-mails: use the shared avatar cache of npe (same image as on the other sunamo.cz sites).
+        const mail = user?.username?.trim().toLowerCase();
+        if (mail?.includes('@')) {
+          const hash = createHash('md5').update(mail).digest('hex');
+          return res.send(`https://cats.sunamo.cz/npe/Avatar/Get?hash=${hash}`);
+        }
+
+        throw new ApiError(9002);
       },
     );
   },
