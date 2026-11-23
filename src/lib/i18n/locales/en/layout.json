@@ -130,6 +130,9 @@
     "themeDark": "Dark",
     "themeAuto": "Auto",
     "allSites": "All sunamo sites",
-    "home": "Home"
+    "home": "Home",
+    "navigation": "Navigation",
+    "mySites": "My sites",
+    "myApps": "My apps"
   }
 }

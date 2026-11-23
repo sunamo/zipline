@@ -57,6 +57,9 @@
     "themeDark": "Tmavý",
     "themeAuto": "Automaticky",
     "allSites": "Všechny weby sunamo",
-    "home": "Domů"
+    "home": "Domů",
+    "navigation": "Navigace",
+    "mySites": "Moje weby",
+    "myApps": "Moje aplikace"
   }
 }
