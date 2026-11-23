@@ -59,16 +59,6 @@ import VersionBadge from './VersionBadge';
 import DashboardUpload from './upload/DashboardUpload';
 import { SETTINGS_EXTERNAL_LINKS } from './pages/serverSettings';
 
-// Same colour strip as the other sunamo.cz sites (--scz-color-bar in fluent-base.css).
-const SUNAMO_COLOR_BAR =
-  'linear-gradient(to right, #0B0B3F 0%, #0B0B3F 5%, #BB4C2E 5%, #BB4C2E 10%, #20096E 10%, #20096E 15%, ' +
-  '#8F750D 15%, #8F750D 20%, #008E40 20%, #008E40 25%, #76D9DE 25%, #76D9DE 30%, ' +
-  '#93B51D 30%, #93B51D 35%, #C99397 35%, #C99397 40%, #70C2E5 40%, #70C2E5 45%, ' +
-  '#BCE4F7 45%, #BCE4F7 50%, #3B83D2 50%, #3B83D2 55%, #E96997 55%, #E96997 60%, ' +
-  '#DEB086 60%, #DEB086 65%, #C77341 65%, #C77341 70%, #6D7F2F 70%, #6D7F2F 75%, ' +
-  '#EC897B 75%, #EC897B 80%, #AE485C 80%, #AE485C 85%, #CC08C9 85%, #CC08C9 90%, ' +
-  '#C04277 90%, #C04277 95%, #A74B89 95%, #A74B89 100%)';
-
 // Button look of the Vuetify toolbar on the other sunamo.cz sites (36 px high, pill, 8 % hover overlay).
 const SCZ_BUTTON_CSS = `
 .scz-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:64px;height:36px;padding:0 16px;border:0;border-radius:24px;background:transparent;color:#fff;font:500 14px/1 inherit;font-family:inherit;letter-spacing:.1px;text-decoration:none;cursor:pointer;transition:box-shadow .28s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1),opacity .28s cubic-bezier(.4,0,.2,1),background .28s cubic-bezier(.4,0,.2,1)}
@@ -457,20 +447,13 @@ export default function Layout() {
         >
           <AppShell.Header
             px={0}
-            style={{ backgroundColor: colorScheme === 'dark' ? '#135aa1' : '#1976d2', borderBottom: 'none' }}
+            style={{
+              backgroundColor: colorScheme === 'dark' ? '#135aa1' : '#1976d2',
+              borderBottom: 'none',
+              boxShadow:
+                '0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12)',
+            }}
           >
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                bottom: -5,
-                height: 5,
-                pointerEvents: 'none',
-                background: SUNAMO_COLOR_BAR,
-              }}
-            />
             <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
               <button
                 type='button'
