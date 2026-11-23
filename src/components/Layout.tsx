@@ -553,13 +553,7 @@ export default function Layout() {
                 </ul>
               </DrawerSection>
 
-              <DrawerSection
-                title={
-                  isAdministrator(user?.role)
-                    ? t('userMenu.administratorLabel', { username: user?.username })
-                    : (user?.username ?? '')
-                }
-              >
+              <DrawerSection title='Zipline'>
                 <ul className='scz-nav-list'>
                   <li>
                     <a
