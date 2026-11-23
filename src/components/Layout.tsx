@@ -62,14 +62,12 @@ import { SETTINGS_EXTERNAL_LINKS } from './pages/serverSettings';
 // Button look of the Vuetify toolbar on the other sunamo.cz sites (36 px high, pill, 8 % hover overlay).
 const SCZ_BUTTON_CSS = `
 .scz-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:64px;height:36px;padding:0 16px;border:0;border-radius:24px;background:transparent;color:#fff;font:500 14px/1 inherit;font-family:inherit;letter-spacing:.1px;text-decoration:none;cursor:pointer;transition:box-shadow .28s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1),opacity .28s cubic-bezier(.4,0,.2,1),background .28s cubic-bezier(.4,0,.2,1)}
-.scz-btn::before{content:'';position:absolute;inset:0;border-radius:inherit;background:#fff;opacity:0;transition:opacity .2s ease-in-out;pointer-events:none}
-.scz-btn:hover::before{opacity:.16}
-.scz-btn:focus-visible::before{opacity:.22}
-.scz-btn:active::before{opacity:.28}
+.scz-btn::before{content:'';position:absolute;inset:0;border-radius:inherit;background:currentColor;opacity:0;transition:opacity .2s ease-in-out;pointer-events:none}
+.scz-btn:hover::before{opacity:.04}
+.scz-btn:focus-visible::before{opacity:.12}
+.scz-btn:active::before{opacity:.12}
 .scz-btn-link{color:#008000}
 .scz-btn-link:hover{color:hotpink;transition:color .9s}
-.scz-drawer .scz-btn::before{background:currentColor}
-.scz-drawer .scz-btn:hover::before{opacity:.08}
 .scz-drawer{margin-left:16px;overflow-y:auto;height:100vh}
 .scz-nav-list{list-style:none;padding:0;margin:8px 0 0 0}
 .scz-nav-link{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:6px 10px;border-radius:6px;text-decoration:none;color:inherit;font-size:.95rem;cursor:pointer;transition:background-color .15s ease,padding-left .15s ease}
