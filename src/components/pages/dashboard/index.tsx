@@ -45,7 +45,7 @@ export default function DashboardHome() {
         <SafeTrans
           t={t}
           i18nKey='welcome'
-          values={{ username: user?.username ?? '' }}
+          values={{ username: (user?.username ?? '').split('@')[0] }}
           components={{ b: <b /> }}
         />
       </Title>
