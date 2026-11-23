@@ -285,13 +285,22 @@ const renderSites = (sites: SunamoSite[]) => {
         href={local ? `http://localhost:${site.localPort}/${locale}/` : `https://${site.prodHost}/${locale}/`}
       >
         <img
-          src={`https://${site.prodHost}/favicon.ico`}
+          src={
+            local ? `http://localhost:${site.localPort}/favicon.ico` : `https://${site.prodHost}/favicon.ico`
+          }
           alt=''
           width={20}
           height={20}
           loading='lazy'
           style={{ flex: '0 0 auto', objectFit: 'contain' }}
-          onError={(event) => ((event.target as HTMLImageElement).style.visibility = 'hidden')}
+          onError={(event) => {
+            const img = event.target as HTMLImageElement;
+            const fallback = `https://${site.prodHost}/favicon.ico`;
+            if (img.dataset.fallback !== '1' && img.src !== fallback) {
+              img.dataset.fallback = '1';
+              img.src = fallback;
+            } else img.style.visibility = 'hidden';
+          }}
         />
         <span>{local ? site.short : site.prodHost}</span>
       </a>
