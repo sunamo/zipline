@@ -644,16 +644,6 @@ export default function Layout() {
                   )}
                   {themeChoice === 'dark' ? t('menu.themeLight') : t('menu.themeDark')}
                 </button>
-                {themeChoice !== 'auto' && (
-                  <button
-                    type='button'
-                    className='scz-btn'
-                    style={{ color: 'inherit' }}
-                    onClick={() => switchTheme('auto')}
-                  >
-                    {t('menu.themeAuto')}
-                  </button>
-                )}
               </DrawerSection>
 
               <DrawerSection title={t('menu.mySites')}>
