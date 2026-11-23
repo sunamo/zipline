@@ -10,14 +10,10 @@ import type { SafeConfig } from '@/lib/config/safe';
 import { fetchApi } from '@/lib/fetchApi';
 import { isAdministrator } from '@/lib/role';
 import {
-  ActionIcon,
   AppShell,
-  Avatar,
-  Button,
   Box,
   Divider,
   Drawer,
-  Group,
   NavLink,
   Paper,
   ScrollArea,
@@ -25,7 +21,6 @@ import {
   Stack,
   Text,
   Title,
-  Tooltip,
   useMantineColorScheme,
 } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
@@ -51,6 +46,7 @@ import {
   IconTags,
   IconUpload,
   IconUsersGroup,
+  IconUserCircle,
   IconWorld,
 } from '@tabler/icons-react';
 import type { TFunction } from 'i18next';
@@ -72,6 +68,15 @@ const SUNAMO_COLOR_BAR =
   '#DEB086 60%, #DEB086 65%, #C77341 65%, #C77341 70%, #6D7F2F 70%, #6D7F2F 75%, ' +
   '#EC897B 75%, #EC897B 80%, #AE485C 80%, #AE485C 85%, #CC08C9 85%, #CC08C9 90%, ' +
   '#C04277 90%, #C04277 95%, #A74B89 95%, #A74B89 100%)';
+
+// Button look of the Vuetify toolbar on the other sunamo.cz sites (36 px high, pill, 8 % hover overlay).
+const SCZ_BUTTON_CSS = `
+.scz-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:64px;height:36px;padding:0 16px;border:0;border-radius:24px;background:transparent;color:#fff;font:500 14px/1 inherit;font-family:inherit;letter-spacing:.1px;text-decoration:none;cursor:pointer;transition:box-shadow .28s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1),opacity .28s cubic-bezier(.4,0,.2,1),background .28s cubic-bezier(.4,0,.2,1)}
+.scz-btn::before{content:'';position:absolute;inset:0;border-radius:inherit;background:currentColor;opacity:0;transition:opacity .2s ease-in-out;pointer-events:none}
+.scz-btn:hover::before{opacity:.08}
+.scz-btn:focus-visible::before{opacity:.12}
+.scz-btn:active::before{opacity:.16}
+`;
 
 // Central npe site (root of all sunamo sites): local FE port 4005 on localhost, sunamo.cz otherwise.
 const npeRootUrl = () =>
@@ -358,6 +363,7 @@ export default function Layout() {
 
   return (
     <ConfigProvider data={loaderData}>
+      <style>{SCZ_BUTTON_CSS}</style>
       <DashboardUpload>
         <AppShell
           navbar={{ breakpoint: 'sm', width: { sm: 200, lg: 230 }, collapsed: { mobile: !opened } }}
@@ -365,7 +371,7 @@ export default function Layout() {
           footer={{ height: { base: 0.1 } }}
         >
           <AppShell.Header
-            px='md'
+            px={0}
             style={{ backgroundColor: colorScheme === 'dark' ? '#135aa1' : '#1976d2', borderBottom: 'none' }}
           >
             <div
@@ -381,88 +387,67 @@ export default function Layout() {
               }}
             />
             <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-              <ActionIcon
-                variant='subtle'
-                color='white'
-                size='lg'
-                radius='xl'
-                mr='xs'
+              <button
+                type='button'
+                className='scz-btn'
+                style={{ marginLeft: 4 }}
                 aria-label={t('menu.open')}
                 onClick={() => setMenuOpened(true)}
               >
-                <IconMenu2 size='1.4rem' />
-              </ActionIcon>
+                <IconMenu2 size={24} />
+              </button>
 
-              {config.website.titleLogo && (
-                <Avatar
-                  src={config.website.titleLogo}
-                  alt={t('header.logoAlt')}
-                  radius='sm'
-                  size='md'
-                  mr='md'
-                />
+              <a
+                className='scz-btn'
+                style={{ color: '#008000' }}
+                href={`${npeRootUrl()}/${urlLocale}`}
+                title={t('menu.allSites')}
+                aria-label={t('menu.allSites')}
+              >
+                <IconWorld size={24} />
+              </a>
+
+              {location.pathname !== '/dashboard' && (
+                <Link
+                  className='scz-btn'
+                  style={{ color: '#008000' }}
+                  to='/dashboard'
+                  title={t('menu.home')}
+                  aria-label={t('menu.home')}
+                >
+                  <IconHome size={24} />
+                </Link>
               )}
 
-              <Group gap='xs' wrap='nowrap'>
-                <Tooltip label={t('menu.allSites')}>
-                  <ActionIcon
-                    component='a'
-                    href={`${npeRootUrl()}/${urlLocale}`}
-                    variant='subtle'
-                    color='#008000'
-                    size='lg'
-                    radius='xl'
-                    aria-label={t('menu.allSites')}
-                  >
-                    <IconWorld size='1.4rem' />
-                  </ActionIcon>
-                </Tooltip>
-
-                <Tooltip label={t('menu.home')}>
-                  <ActionIcon
-                    component={Link}
-                    to='/dashboard'
-                    variant='subtle'
-                    color='#008000'
-                    size='lg'
-                    radius='xl'
-                    aria-label={t('menu.home')}
-                  >
-                    <IconHome size='1.4rem' />
-                  </ActionIcon>
-                </Tooltip>
-              </Group>
-
-              <Group gap={4} wrap='nowrap' style={{ marginLeft: 'auto' }}>
-                <ActionIcon
-                  component='a'
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto', marginRight: 4 }}
+              >
+                <a
+                  className='scz-btn'
                   href={`${npeRootUrl()}/${urlLocale}/profile`}
-                  variant='subtle'
-                  size='xl'
-                  radius='xl'
                   aria-label={user?.username ?? t('header.avatarAlt')}
                 >
                   {avatar ? (
-                    <Avatar
+                    <img
                       src={avatar}
-                      radius='xl'
-                      size={36}
-                      alt={user?.username ?? t('header.avatarAlt')}
+                      alt=''
+                      style={{
+                        width: 36,
+                        height: 36,
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        display: 'block',
+                      }}
                     />
                   ) : (
-                    <IconSettingsFilled size='1.4rem' color='white' />
+                    <IconUserCircle size={36} />
                   )}
-                </ActionIcon>
-                <Button
-                  variant='subtle'
-                  color='white'
-                  radius='xl'
-                  rightSection={<IconChevronRight size='1rem' />}
-                  onClick={logout}
-                >
+                </a>
+                <button type='button' className='scz-btn' onClick={logout}>
                   {t('userMenu.logout')}
-                </Button>
-              </Group>
+                  <IconChevronRight size={18} style={{ marginLeft: 8 }} />
+                </button>
+              </div>
             </div>
           </AppShell.Header>
 
